@@ -1,12 +1,46 @@
 #!/usr/bin/env bash
 # CLI-bear mascot — a teddy bear with a terminal "belly".
-# Color codes: G = dim green (body), B = bright green (screen frame), R = reset.
+# Usage: ./bear.sh [--no-color] [--prompt-text "TEXT"]
 
-G='\033[2;32m'; B='\033[1;92m'; R='\033[0m'
+NO_COLOR=0
+PROMPT_TEXT="@Bear_cli:~$ █"
 
-printf "${B}@Bear_cli:~\$ █${R}\n\n"
+# Simple arg parsing
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    --no-color)
+      NO_COLOR=1; shift ;;
+    --prompt-text)
+      PROMPT_TEXT="$2"; shift 2 ;;
+    -h|--help)
+      cat <<'EOF'
+Usage: bear.sh [--no-color] [--prompt-text "TEXT"]
 
-printf "${G}     .--.        .--.
+Options:
+  --no-color        Disable ANSI colors (print plain ASCII)
+  --prompt-text TXT Replace the prompt text inside the bear's terminal box
+  -h, --help        Show this help and exit
+EOF
+      exit 0 ;;
+    *)
+      echo "Unknown option: $1" >&2; exit 2 ;;
+  esac
+done
+
+# Color codes
+if [ "$NO_COLOR" -eq 1 ]; then
+  G=''; B=''; R=''
+else
+  G='\033[2;32m'   # dim green (body)
+  B='\033[1;92m'   # bright green (screen frame)
+  R='\033[0m'      # reset
+fi
+
+# Print prompt line
+printf "%b\n\n" "${B}${PROMPT_TEXT}${R}"
+
+# The ASCII art — note use of doubled backslashes so the printed output keeps single backslashes
+printf "%b\n" "${G}     .--.        .--.
     /    \\\\______/    \\\
      |  o        o  |
       \\\\    ____    /
@@ -24,11 +58,7 @@ _.-'                 '-._
 |   ${B}'---------------'${G}   |
 '-----------------------'
       |  |      |  |
-      '--'      '--'${R}\n"
+      '--'      '--'${R}"
 
-# Notes on the escaping (this is what makes it work):
-#
-# \\\\ → prints a single literal \ (backslash on the bear's arms/ears). It's doubled twice because both the shell string and printf each consume one level.
-# \$ → prints a literal $ (so $ in the prompt isn't treated as a shell variable).
-# ${G} / ${B} / ${R} → the color variables get substituted, wrapping the art instead of sitting inside it — the bug in your original.
-# The color of any line "sticks" until the next code, so ${B}...${G} colors just the screen frame and returns the body to dim green.
+# Exit successfully
+exit 0
